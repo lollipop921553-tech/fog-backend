@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Navigate, Link } from 'react-router-dom';
@@ -12,8 +13,10 @@ const WalletPage: React.FC = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
 
     useEffect(() => {
-        getTransactions().then(setTransactions);
-    }, []);
+        if (user) {
+            getTransactions(user.id).then(setTransactions);
+        }
+    }, [user]);
 
     if (!user) {
         return <Navigate to="/login" />;
@@ -208,7 +211,7 @@ const HistorySection: React.FC<{transactions: Transaction[]}> = ({ transactions 
                         </div>
                          <div>
                             <p className="font-semibold text-fog-dark dark:text-fog-light">{tx.description}</p>
-                            <p className="text-sm text-gray-500">{tx.date} &middot; {tx.type}</p>
+                            <p className="text-sm text-gray-500">{new Date(tx.date).toLocaleDateString()} &middot; {tx.type}</p>
                         </div>
                     </div>
                    <div className="text-right">

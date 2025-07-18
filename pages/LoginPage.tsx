@@ -2,45 +2,44 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogoIcon, GoogleIcon } from '../components/Icons';
-import { User, Role } from '../types';
+import { supabase } from '../services/supabaseClient';
 
 const LoginPage: React.FC = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const createDummyUser = (email: string, name?: string): User => ({
-    id: `user-${Date.now()}`,
-    name: name || email.split('@')[0] || 'New User',
-    email: email,
-    avatarUrl: `https://picsum.photos/seed/${email}/200/200`,
-    tagline: 'Ready to work!',
-    roles: [Role.Client, Role.Freelancer, Role.Tasker],
-    points: 1250,
-    usdBalance: 250.75,
-    rating: 4.9,
-    skills: ['React', 'TypeScript', 'Node.js', 'Plumbing'],
-    isIdVerified: true,
-    isLinkedInVerified: true,
-    isPremium: true,
-    unreadMessages: 0,
-    bio: 'A passionate professional ready to tackle new challenges on the FOG platform.',
-    workHistory: [],
-  });
-  
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!email || !password) return;
-    const userToLogin = createDummyUser(email);
-    login(userToLogin);
-    navigate('/dashboard');
+    setError('');
+    setMessage('');
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({ 
+      email,
+      options: {
+        emailRedirectTo: window.location.origin,
+      }
+    });
+
+    if (error) {
+      setError(`Login failed: ${error.message}`);
+    } else {
+      setMessage('Check your email for the magic login link!');
+    }
+    setLoading(false);
   };
   
-  const handleGoogleLogin = () => {
-    const googleUser = createDummyUser('google.user@example.com', 'Google User');
-    login(googleUser);
-    navigate('/dashboard');
+  const handleGoogleLogin = async () => {
+    setError('');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    if (error) {
+      setError(`Google login failed: ${error.message}`);
+    }
   };
 
   if (isAuthenticated) {
@@ -96,32 +95,17 @@ const LoginPage: React.FC = () => {
                       <label htmlFor="email-address" className="sr-only">Email address</label>
                       <input id="email-address" name="email" type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm" placeholder="Email address" />
                   </div>
-                   <div>
-                      <label htmlFor="password" className="sr-only">Password</label>
-                      <input id="password" name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm" placeholder="Password" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                          <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-fog-accent focus:ring-fog-accent border-gray-300 rounded" />
-                          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                              Remember me
-                          </label>
-                      </div>
-
-                      <div className="text-sm">
-                          <a href="#" className="font-medium text-fog-accent hover:text-fog-accent-hover">
-                              Forgot your password?
-                          </a>
-                      </div>
-                  </div>
+                  
+                  {message && <p className="text-sm text-center text-green-600 dark:text-green-400">{message}</p>}
+                  {error && <p className="text-sm text-center text-red-600 dark:text-red-400">{error}</p>}
 
                   <div>
                     <button
                       type="submit"
-                      className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-fog-accent hover:bg-fog-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-fog-light dark:ring-offset-fog-dark focus:ring-fog-accent"
+                      disabled={loading}
+                      className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-fog-accent hover:bg-fog-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-fog-light dark:ring-offset-fog-dark focus:ring-fog-accent disabled:bg-fog-mid"
                     >
-                      Sign in
+                      {loading ? 'Sending...' : 'Send Magic Link'}
                     </button>
                   </div>
 

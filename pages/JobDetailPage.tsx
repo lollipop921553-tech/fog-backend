@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getJobById, getBidsByJobId, getCommentsByJobId, addBid, addComment } from '../services/apiService';
 import { Job, Bid, Comment } from '../types';
-import { LocationPinIcon, StarIcon, CheckBadgeIcon, ZapIcon, MessageIcon } from '../components/Icons';
+import { LocationPinIcon, StarIcon, CheckBadgeIcon, ZapIcon, ChatBubbleIcon } from '../components/Icons';
 import NotFoundPage from './NotFoundPage';
 import BackButton from '../components/BackButton';
 
@@ -29,6 +30,12 @@ const JobDetailPage: React.FC = () => {
             setLoading(false);
         });
     }, [jobId]);
+
+    const handleMessageClick = (e: React.MouseEvent, userId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.dispatchEvent(new CustomEvent('open-messages', { detail: { userId } }));
+    };
 
     const handlePlaceBid = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -79,7 +86,7 @@ const JobDetailPage: React.FC = () => {
                         <p className="text-sm text-fog-secondary font-semibold uppercase">{job.type}</p>
                         <h1 className="text-3xl font-bold text-fog-dark dark:text-fog-light mt-1">{job.title}</h1>
                         <div className="flex items-center text-sm text-gray-500 dark:text-slate-400 mt-2 gap-4 flex-wrap">
-                            <span>Posted by <Link to="#" className="font-semibold text-fog-accent hover:underline">{job.postedBy.name}</Link></span>
+                            <span>Posted by <Link to={`/profile/${job.postedBy.id}`} className="font-semibold text-fog-accent hover:underline">{job.postedBy.name}</Link></span>
                             {job.type === 'task' && job.location && (
                                 <span className="flex items-center"><LocationPinIcon className="w-4 h-4 mr-1"/>{job.location}</span>
                             )}
@@ -108,9 +115,18 @@ const JobDetailPage: React.FC = () => {
                         <div className="space-y-4">
                             {comments.map(comment => (
                                 <div key={comment.id} className="flex items-start space-x-3">
-                                    <img src={comment.user.avatarUrl} alt={comment.user.name} className="w-10 h-10 rounded-full" />
+                                    <Link to={`/profile/${comment.user.id}`}>
+                                        <img src={comment.user.avatarUrl} alt={comment.user.name} className="w-10 h-10 rounded-full" />
+                                    </Link>
                                     <div className="flex-1 bg-gray-50 dark:bg-slate-800/50 p-3 rounded-lg">
-                                        <p className="font-semibold text-sm text-fog-dark dark:text-fog-light">{comment.user.name}</p>
+                                        <p className="font-semibold text-sm text-fog-dark dark:text-fog-light flex items-center gap-1.5">
+                                            <Link to={`/profile/${comment.user.id}`} className="hover:underline">{comment.user.name}</Link>
+                                            {isAuthenticated && user?.id !== comment.user.id && (
+                                                <button onClick={(e) => handleMessageClick(e, comment.user.id)} className="text-gray-400 hover:text-fog-accent transition-colors" aria-label={`Message ${comment.user.name}`}>
+                                                    <ChatBubbleIcon className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </p>
                                         <p className="text-gray-700 dark:text-slate-300">{comment.content}</p>
                                     </div>
                                 </div>
@@ -154,9 +170,18 @@ const JobDetailPage: React.FC = () => {
                                 <li key={bid.id} className="border-b border-gray-100 dark:border-slate-800 pb-4 last:border-b-0 last:pb-0">
                                     <div className="flex justify-between items-center">
                                         <div className="flex items-center gap-2">
-                                            <img src={bid.user.avatarUrl} alt={bid.user.name} className="w-8 h-8 rounded-full" />
+                                            <Link to={`/profile/${bid.user.id}`}>
+                                                <img src={bid.user.avatarUrl} alt={bid.user.name} className="w-8 h-8 rounded-full" />
+                                            </Link>
                                             <div>
-                                                <p className="font-semibold text-sm text-fog-dark dark:text-fog-light">{bid.user.name}</p>
+                                                <p className="font-semibold text-sm text-fog-dark dark:text-fog-light flex items-center gap-1.5">
+                                                  <Link to={`/profile/${bid.user.id}`} className="hover:underline">{bid.user.name}</Link>
+                                                   {isAuthenticated && user?.id !== bid.user.id && (
+                                                        <button onClick={(e) => handleMessageClick(e, bid.user.id)} className="text-gray-400 hover:text-fog-accent transition-colors" aria-label={`Message ${bid.user.name}`}>
+                                                            <ChatBubbleIcon className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </p>
                                                 <p className="text-xs flex items-center gap-1 text-gray-500 dark:text-slate-400"><StarIcon className="w-3 h-3 text-yellow-400"/> {bid.user.rating}</p>
                                             </div>
                                         </div>
@@ -177,9 +202,18 @@ const JobDetailPage: React.FC = () => {
                         )}
                         <h3 className="font-bold text-lg text-fog-dark dark:text-fog-light mb-4">About the Client</h3>
                         <div className="flex items-center gap-4">
-                            <img src={job.postedBy.avatarUrl} alt={job.postedBy.name} className="w-16 h-16 rounded-full" />
+                           <Link to={`/profile/${job.postedBy.id}`}>
+                              <img src={job.postedBy.avatarUrl} alt={job.postedBy.name} className="w-16 h-16 rounded-full" />
+                           </Link>
                             <div>
-                                <p className="font-bold text-fog-dark dark:text-fog-light">{job.postedBy.name}</p>
+                                <p className="font-bold text-fog-dark dark:text-fog-light flex items-center gap-2">
+                                  <Link to={`/profile/${job.postedBy.id}`} className="hover:underline">{job.postedBy.name}</Link>
+                                    {isAuthenticated && user?.id !== job.postedBy.id && (
+                                        <button onClick={(e) => handleMessageClick(e, job.postedBy.id)} className="text-gray-400 hover:text-fog-accent transition-colors" aria-label={`Message ${job.postedBy.name}`}>
+                                            <ChatBubbleIcon className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </p>
                                 <div className="flex items-center text-sm text-gray-500 dark:text-slate-400 mt-1">
                                     <StarIcon className="w-4 h-4 text-yellow-400 mr-1"/>
                                     {job.postedBy.rating} Rating

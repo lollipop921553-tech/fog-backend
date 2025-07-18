@@ -1,4 +1,6 @@
 
+
+
 export enum Role {
   Freelancer = 'Freelancer',
   Tasker = 'Tasker',
@@ -10,6 +12,42 @@ export enum JobType {
   Freelance = 'freelance',
   Task = 'task'
 }
+
+export interface JobPosterInfo {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  rating: number;
+  isPremium: boolean;
+}
+
+export interface BidderInfo {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    rating: number;
+    isPremium: boolean;
+    isIdVerified: boolean;
+}
+
+export interface CommenterInfo {
+    id: string;
+    name: string;
+    avatarUrl: string;
+}
+
+export interface ActivityUserInfo {
+    id: string;
+    name: string;
+    avatarUrl: string;
+}
+
+export interface ConversationSummary {
+    otherUser: Pick<User, 'id' | 'name' | 'avatarUrl'>;
+    lastMessage: Message;
+    unreadCount: number;
+    isBuying: boolean;
+};
 
 export interface User {
   id: string;
@@ -25,7 +63,7 @@ export interface User {
   isIdVerified: boolean;
   isLinkedInVerified: boolean;
   isPremium: boolean;
-  workHistory: Job[];
+  workHistory: Omit<Job, 'postedBy'>[];
   bio: string;
   unreadMessages: number;
 }
@@ -38,7 +76,7 @@ export interface Job {
   budget: number;
   skills: string[];
   location?: string; // Only for tasks
-  postedBy: Pick<User, 'id' | 'name' | 'avatarUrl' | 'rating' | 'isPremium'>;
+  postedBy: JobPosterInfo;
   isSponsored: boolean;
   createdAt: string;
   allowsPointDiscount?: boolean;
@@ -89,7 +127,7 @@ export interface Transaction {
 
 export interface Bid {
   id: string;
-  user: Pick<User, 'id' | 'name' | 'avatarUrl' | 'rating' | 'isPremium' | 'isIdVerified'>;
+  user: BidderInfo;
   amount: number;
   message: string;
   createdAt: string;
@@ -97,7 +135,7 @@ export interface Bid {
 
 export interface Comment {
   id:string;
-  user: Pick<User, 'id' | 'name' | 'avatarUrl'>;
+  user: CommenterInfo;
   content: string;
   createdAt: string;
 }
@@ -109,5 +147,5 @@ export interface Activity {
     timestamp: string;
     isRead: boolean;
     link?: string;
-    user?: Pick<User, 'name' | 'avatarUrl'>;
+    user?: ActivityUserInfo;
 }

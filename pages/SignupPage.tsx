@@ -2,63 +2,49 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogoIcon, GoogleIcon } from '../components/Icons';
-import { User, Role } from '../types';
+import { supabase } from '../services/supabaseClient';
 
 const SignupPage: React.FC = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Client' });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({...prev, [name]: value}));
-  };
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      name: formData.name,
-      email: formData.email,
-      avatarUrl: `https://picsum.photos/seed/${formData.email}/200/200`,
-      tagline: `New ${formData.role}`,
-      roles: [formData.role as Role],
-      points: 0,
-      usdBalance: 0,
-      rating: 0,
-      skills: [],
-      isIdVerified: false,
-      isLinkedInVerified: false,
-      isPremium: false,
-      unreadMessages: 0,
-      bio: '',
-      workHistory: [],
-    };
-    login(newUser);
-    navigate('/dashboard');
+    setError('');
+    setMessage('');
+    setLoading(true);
+    
+    const { error } = await supabase.auth.signInWithOtp({ 
+        email,
+        options: {
+            emailRedirectTo: window.location.origin,
+            data: {
+                full_name: name,
+            }
+        }
+    });
+
+    if (error) {
+      setError(`Sign up failed: ${error.message}`);
+    } else {
+      setMessage('Check your email for the magic sign up link!');
+    }
+    setLoading(false);
   };
 
-  const handleGoogleSignup = () => {
-    const googleUser: User = {
-      id: `user-${Date.now()}`,
-      name: 'Google User',
-      email: 'google.user@example.com',
-      avatarUrl: `https://picsum.photos/seed/google-signup/200/200`,
-      tagline: `New Client`,
-      roles: [Role.Client],
-      points: 0,
-      usdBalance: 0,
-      rating: 0,
-      skills: [],
-      isIdVerified: false,
-      isLinkedInVerified: false,
-      isPremium: false,
-      unreadMessages: 0,
-      bio: '',
-      workHistory: [],
-    };
-    login(googleUser);
-    navigate('/dashboard');
+  const handleGoogleSignup = async () => {
+    setError('');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    if (error) {
+      setError(`Google sign up failed: ${error.message}`);
+    }
   };
   
   if (isAuthenticated) {
@@ -115,29 +101,23 @@ const SignupPage: React.FC = () => {
                 <form className="mt-6 space-y-6" onSubmit={handleSignup}>
                    <div>
                       <label htmlFor="full-name" className="sr-only">Full Name</label>
-                      <input id="full-name" name="name" type="text" required value={formData.name} onChange={handleInputChange} className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm" placeholder="Full Name" />
+                      <input id="full-name" name="name" type="text" required value={name} onChange={e => setName(e.target.value)} className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm" placeholder="Full Name" />
                   </div>
                    <div>
                       <label htmlFor="email-address-signup" className="sr-only">Email address</label>
-                      <input id="email-address-signup" name="email" type="email" autoComplete="email" required value={formData.email} onChange={handleInputChange} className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm" placeholder="Email address" />
+                      <input id="email-address-signup" name="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm" placeholder="Email address" />
                   </div>
-                  <div>
-                      <label htmlFor="password-signup" className="sr-only">Password</label>
-                      <input id="password-signup" name="password" type="password" required value={formData.password} onChange={handleInputChange} className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm" placeholder="Password" />
-                  </div>
-                  <div>
-                    <label htmlFor="role" className="sr-only">I am a...</label>
-                    <select id="role" name="role" required value={formData.role} onChange={handleInputChange} className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 focus:outline-none focus:ring-fog-accent focus:border-fog-accent sm:text-sm">
-                      <option value="Client">I want to hire talent (Client)</option>
-                      <option value="Freelancer">I want to find work (Professional)</option>
-                    </select>
-                  </div>
+
+                  {message && <p className="text-sm text-center text-green-600 dark:text-green-400">{message}</p>}
+                  {error && <p className="text-sm text-center text-red-600 dark:text-red-400">{error}</p>}
+
                   <div>
                     <button
                       type="submit"
-                      className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-fog-accent hover:bg-fog-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-fog-light dark:ring-offset-fog-dark focus:ring-fog-accent"
+                      disabled={loading}
+                      className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-fog-accent hover:bg-fog-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-fog-light dark:ring-offset-fog-dark focus:ring-fog-accent disabled:bg-fog-mid"
                     >
-                      Create Account
+                      {loading ? 'Sending...' : 'Sign Up with Magic Link'}
                     </button>
                   </div>
                    <p className="text-xs text-center text-gray-500 dark:text-gray-400">

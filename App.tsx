@@ -1,5 +1,6 @@
-import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+import React, { useEffect } from 'react';
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ChatWidget from './components/ChatWidget';
@@ -27,6 +28,18 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import WalletPage from './pages/WalletPage';
 import WatchAdsPage from './pages/WatchAdsPage';
+import ProfilePage from './pages/ProfilePage';
+
+// Helper component to scroll to top on route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 const AppLayout: React.FC = () => {
   return (
@@ -42,6 +55,7 @@ const AppLayout: React.FC = () => {
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/rewards-hub" element={<RewardsHubPage />} />
           <Route path="/job/:jobId" element={<JobDetailPage />} />
+          <Route path="/profile/:userId" element={<ProfilePage />} />
           
           {/* Static Content Pages */}
           <Route path="/about" element={<AboutPage />} />
@@ -76,6 +90,7 @@ const AppLayout: React.FC = () => {
 const App: React.FC = () => {
   return (
     <HashRouter>
+      <ScrollToTop />
       <AppLayout />
     </HashRouter>
   );

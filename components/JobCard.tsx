@@ -1,13 +1,20 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Job, JobType } from '../types';
-import { LocationPinIcon, StarIcon, ZapIcon } from './Icons';
+import { LocationPinIcon, StarIcon, ZapIcon, ChatBubbleIcon } from './Icons';
 
 interface JobCardProps {
   job: Job;
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job }) => {
+  const handleMessageClick = (e: React.MouseEvent, userId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.dispatchEvent(new CustomEvent('open-messages', { detail: { userId } }));
+  };
+
   return (
     <div className={`relative bg-fog-white dark:bg-fog-mid-dark rounded-lg shadow-md hover:shadow-xl dark:shadow-lg-dark dark:hover:shadow-xl-dark transition-all duration-300 border ${job.isSponsored ? 'border-fog-secondary' : 'border-transparent dark:border-slate-700'} hover:-translate-y-1`}>
       <div className="p-6">
@@ -19,13 +26,18 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
           </div>
         )}
         <div className="flex items-start mb-4">
-          <img className="h-12 w-12 rounded-full object-cover" src={job.postedBy.avatarUrl} alt={job.postedBy.name} />
+          <Link to={`/profile/${job.postedBy.id}`} className="flex-shrink-0">
+            <img className="h-12 w-12 rounded-full object-cover" src={job.postedBy.avatarUrl} alt={job.postedBy.name} />
+          </Link>
           <div className="ml-4 flex-1">
             <h3 className="text-lg font-semibold text-fog-dark dark:text-fog-light leading-tight hover:text-fog-accent transition-colors">
                 <Link to={`/job/${job.id}`}>{job.title}</Link>
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <span>by {job.postedBy.name}</span>
+              <span>by <Link to={`/profile/${job.postedBy.id}`} className="hover:underline font-medium">{job.postedBy.name}</Link></span>
+              <button onClick={(e) => handleMessageClick(e, job.postedBy.id)} className="text-gray-400 hover:text-fog-accent transition-colors" aria-label={`Message ${job.postedBy.name}`}>
+                  <ChatBubbleIcon className="w-4 h-4" />
+              </button>
               <span className="inline-flex items-center">
                 <StarIcon className="w-4 h-4 text-yellow-400 mr-1"/>
                 <span className="font-semibold">{job.postedBy.rating}</span>

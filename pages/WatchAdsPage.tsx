@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import BackButton from '../components/BackButton';
 import { useAuth } from '../hooks/useAuth';
@@ -10,7 +11,7 @@ const WatchAdsPage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(AD_DURATION);
   const [isWatching, setIsWatching] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   useEffect(() => {
     let timer: number;
@@ -35,8 +36,9 @@ const WatchAdsPage: React.FC = () => {
     if (!user) return;
     try {
         await claimAdPoints(pointsEarned, user);
-        // In a real app, a success toast would be better.
-        // For now, we'll just reset silently.
+        // Optimistically update the user's points in the context
+        updateUser({ points: user.points + pointsEarned });
+        alert(`Successfully claimed ${pointsEarned} points!`);
     } catch (error) {
         console.error("Failed to claim points:", error);
         alert("There was an error claiming your points. Please try again.");

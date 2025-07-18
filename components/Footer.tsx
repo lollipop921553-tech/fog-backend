@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LogoIcon } from './Icons';
 import { Link } from 'react-router-dom';
@@ -26,16 +27,12 @@ const Footer: React.FC = () => {
     ],
   };
 
-  const handleLinkClick = () => {
-    window.scrollTo(0, 0);
-  };
-
   return (
     <footer className="bg-fog-white dark:bg-fog-dark border-t border-gray-200 dark:border-slate-800">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-8 lg:mb-0">
-            <Link to="/" onClick={handleLinkClick} className="flex items-center space-x-2 text-2xl font-bold text-fog-dark dark:text-fog-white">
+            <Link to="/" className="flex items-center space-x-2 text-2xl font-bold text-fog-dark dark:text-fog-white">
               <LogoIcon />
               <span>FOG</span>
             </Link>
@@ -49,7 +46,7 @@ const Footer: React.FC = () => {
               <ul className="mt-4 space-y-2">
                 {links.map((link) => (
                   <li key={link.name}>
-                    <Link to={link.href} onClick={handleLinkClick} className="text-base text-gray-600 dark:text-gray-300 hover:text-fog-accent dark:hover:text-fog-white transition-colors">
+                    <Link to={link.href} className="text-base text-gray-600 dark:text-gray-300 hover:text-fog-accent dark:hover:text-fog-white transition-colors">
                       {link.name}
                     </Link>
                   </li>

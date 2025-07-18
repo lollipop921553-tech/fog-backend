@@ -1,9 +1,10 @@
+
+
 import { GoogleGenAI } from "@google/genai";
 import type { User, Job, Message } from '../types';
 
 // Initialize AI client gracefully
 let ai: GoogleGenAI | null = null;
-// In a real deployment, this variable must be set in the project's environment settings.
 const apiKey = process.env.API_KEY;
 
 if (apiKey) {
@@ -19,7 +20,7 @@ if (apiKey) {
 
 export async function* generateCoverLetterStream(job: Job, user: User) {
     if (!ai) {
-        yield "AI features are disabled. API key is not configured on the server.";
+        yield "AI features are disabled. API key is not configured in the environment.";
         return;
     }
 
@@ -60,7 +61,7 @@ export async function* generateCoverLetterStream(job: Job, user: User) {
 
 export async function generateMessageReply(lastMessage: Message, currentUser: User) {
     if (!ai) {
-        return "AI features are disabled. Please configure the API_KEY on the server.";
+        return "AI features are disabled. Please configure the API key in the environment.";
     }
 
     const prompt = `
@@ -90,7 +91,7 @@ export interface ChatHistoryPart {
 
 export async function* generateAIChatResponseStream(history: ChatHistoryPart[], userName: string) {
     if (!ai) {
-        yield "AI features are disabled. API key is not configured on the server.";
+        yield "AI features are disabled. API key is not configured in the environment.";
         return;
     }
 

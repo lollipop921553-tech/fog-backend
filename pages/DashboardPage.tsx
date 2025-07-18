@@ -1,7 +1,9 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
-import { CheckBadgeIcon, StarIcon, ZapIcon, WalletIcon, MessageIcon, BriefcaseIcon, ArrowRightIcon, PencilIcon, TrashIcon } from '../components/Icons';
+import { CheckBadgeIcon, StarIcon, ZapIcon, WalletIcon, MessageIcon, BriefcaseIcon, ArrowRightIcon, PencilIcon, TrashIcon, ChatBubbleIcon } from '../components/Icons';
 import { Job, Activity } from '../types';
 import { getJobsByUserId, getActivities, getEarningsBreakdown, getMonthlyActivity, deleteJob } from '../services/apiService';
 import PieChart from '../components/PieChart';
@@ -75,16 +77,32 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleMessageClick = (e: React.MouseEvent, userId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.dispatchEvent(new CustomEvent('open-messages', { detail: { userId } }));
+  };
+  
   const ActivityItem: React.FC<{activity: Activity}> = ({ activity }) => (
-    <li className="flex items-start space-x-4 py-3">
+    <li className="flex items-start space-x-4 py-3 group">
         <div className={`relative flex-shrink-0 mt-1 rounded-full p-2 ${activity.isRead ? 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400' : 'bg-fog-accent/10 text-fog-accent'}`}>
             <ActivityIcon type={activity.type}/>
             {!activity.isRead && <span className="absolute -top-1 -right-1 block h-2.5 w-2.5 rounded-full bg-fog-accent"></span>}
         </div>
         <div className="flex-1">
-             <p className="text-sm text-fog-dark dark:text-fog-light">{activity.text}</p>
+             <p className="text-sm text-fog-dark dark:text-fog-light">
+                {activity.text}
+                {activity.user && (
+                    <Link to={`/profile/${activity.user.id}`} className="font-semibold hover:underline"> {activity.user.name}</Link>
+                )}
+             </p>
             <p className="text-xs text-gray-400 dark:text-slate-500">{new Date(activity.timestamp).toLocaleString()}</p>
         </div>
+        {activity.user && user?.id !== activity.user.id && (
+            <button onClick={(e) => handleMessageClick(e, activity.user!.id)} className="p-2 text-gray-400 hover:text-fog-accent rounded-full transition-colors opacity-0 group-hover:opacity-100" aria-label={`Message ${activity.user.name}`}>
+                <ChatBubbleIcon className="w-5 h-5" />
+            </button>
+        )}
         {activity.link && (
             <Link to={activity.link} className="p-2 text-gray-400 hover:text-fog-accent rounded-full transition-colors">
                 <ArrowRightIcon className="w-5 h-5" />
@@ -107,8 +125,12 @@ const DashboardPage: React.FC = () => {
         <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
           <div className="bg-fog-white dark:bg-fog-mid-dark p-6 rounded-xl shadow-lg dark:shadow-2xl-dark text-center">
             {user.isPremium && <span className="absolute top-4 right-4 text-xs font-bold text-yellow-800 bg-yellow-300/50 px-2 py-1 rounded-full uppercase tracking-wider">PREMIUM</span>}
-            <img className="w-24 h-24 rounded-full mx-auto object-cover ring-4 ring-fog-accent/20" src={user.avatarUrl} alt={user.name} />
-            <h1 className="mt-4 text-2xl font-bold text-fog-dark dark:text-fog-light">{user.name}</h1>
+            <Link to={`/profile/${user.id}`}>
+              <img className="w-24 h-24 rounded-full mx-auto object-cover ring-4 ring-fog-accent/20" src={user.avatarUrl} alt={user.name} />
+            </Link>
+            <h1 className="mt-4 text-2xl font-bold text-fog-dark dark:text-fog-light">
+              <Link to={`/profile/${user.id}`}>{user.name}</Link>
+            </h1>
             <p className="text-fog-mid dark:text-slate-400 text-sm">{user.tagline}</p>
             <div className="mt-4 flex justify-center items-center space-x-4">
               {user.isIdVerified && <span className="flex items-center text-xs text-green-600 dark:text-green-400"><CheckBadgeIcon className="w-4 h-4 mr-1" /> ID Verified</span>}
@@ -157,7 +179,11 @@ const DashboardPage: React.FC = () => {
               <div className="bg-fog-white dark:bg-fog-mid-dark p-6 rounded-xl shadow-lg dark:shadow-2xl-dark">
                   <h3 className="text-xl font-bold text-fog-dark dark:text-fog-light mb-2">Activity Feed</h3>
                   <ul className="divide-y divide-gray-100 dark:divide-slate-800 max-h-80 overflow-y-auto">
-                      {activities.map(activity => <ActivityItem key={activity.id} activity={activity} />)}
+                      {activities.length > 0 ? (
+                        activities.map(activity => <ActivityItem key={activity.id} activity={activity} />)
+                      ) : (
+                        <p className="text-center text-gray-500 dark:text-slate-400 py-4">No recent activity.</p>
+                      )}
                   </ul>
               </div>
 
